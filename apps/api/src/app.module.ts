@@ -11,6 +11,8 @@ import { AuthModule } from './modules/auth/auth.module';
 import { SmtpModule } from './modules/smtp/smtp.module';
 import { GatewayModule } from './modules/gateway/gateway.module';
 import { CleanupModule } from './modules/cleanup/cleanup.module';
+import { RedisModule } from './modules/redis/redis.module';
+import { StatusModule } from './modules/status/status.module';
 
 @Module({
   imports: [
@@ -32,6 +34,8 @@ import { CleanupModule } from './modules/cleanup/cleanup.module';
     SmtpModule,
     GatewayModule,
     CleanupModule,
+    RedisModule,
+    StatusModule,
   ],
   controllers: [],
   providers: [],
