@@ -333,7 +333,7 @@ const Dashboard: React.FC = () => {
       >
         <div className="space-y-4">
           <p className="text-slate-600">
-            Create a new email address. This alias will be active for 1 week by default and can be extended.
+            Create a new email address. This alias will be active for 1 hour by default and can be extended.
           </p>
 
           <div className="flex items-center space-x-2">

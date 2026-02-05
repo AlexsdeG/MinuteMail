@@ -60,11 +60,11 @@ export class AliasesService {
     let expiresAt: Date;
 
     if (user) {
-      // Registered User: 7 Days
-      expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+      // Registered User: 1 Hour
+      expiresAt = new Date(now.getTime() + 60 * 60 * 1000);
     } else {
-      // Guest: 10 Minutes
-      expiresAt = new Date(now.getTime() + 10 * 60 * 1000);
+      // Guest: 1 Hour
+      expiresAt = new Date(now.getTime() + 60 * 60 * 1000);
     }
 
     // Create alias and record in UsedAddress for historical tracking
