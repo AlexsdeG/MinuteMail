@@ -7,11 +7,19 @@ interface TimerProps {
   expiresAt: string;
   onExpire?: () => void;
   className?: string;
+  showFull?: boolean;
+  variant?: 'default' | 'plain';
 }
 
-const Timer: React.FC<TimerProps> = ({ expiresAt, onExpire, className }) => {
+const Timer: React.FC<TimerProps> = ({ 
+  expiresAt, 
+  onExpire, 
+  className,
+  showFull = false,
+  variant = 'default'
+}) => {
   const calculateTimeLeft = () => {
-    const difference = new Date(expiresAt).getTime() - new Date().getTime();
+    const difference = new Date(expiresAt).getTime() - Date.now();
     return difference > 0 ? difference : 0;
   };
 
@@ -42,6 +50,14 @@ const Timer: React.FC<TimerProps> = ({ expiresAt, onExpire, className }) => {
 
   const isUrgent = timeLeft < 60000; // Less than 1 minute
 
+  if (variant === 'plain') {
+    return (
+      <span className={className}>
+        {formatTimeRemaining(timeLeft, showFull)}
+      </span>
+    );
+  }
+
   return (
     <div className={cn(
       "flex items-center space-x-2 text-sm font-mono font-medium px-3 py-1.5 rounded-full bg-slate-100 text-slate-700",
@@ -49,7 +65,7 @@ const Timer: React.FC<TimerProps> = ({ expiresAt, onExpire, className }) => {
       className
     )}>
       <Clock className="h-4 w-4" />
-      <span>{formatTimeRemaining(timeLeft)}</span>
+      <span>{formatTimeRemaining(timeLeft, showFull)}</span>
     </div>
   );
 };

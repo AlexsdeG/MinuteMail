@@ -233,12 +233,12 @@ const Dashboard: React.FC = () => {
                         </button>
                       </td>
                       <td className="px-6 py-4">
-                        <div className={`font-mono text-sm ${getTimerDisplayClass(alias.expiresAt)}`}>
-                          {formatTimeRemaining(
-                            new Date(alias.expiresAt).getTime() - Date.now(),
-                            true
-                          )}
-                        </div>
+                        <Timer
+                          expiresAt={alias.expiresAt}
+                          showFull={true}
+                          variant="plain"
+                          className={`font-mono text-sm ${getTimerDisplayClass(alias.expiresAt)}`}
+                        />
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center space-x-2">
