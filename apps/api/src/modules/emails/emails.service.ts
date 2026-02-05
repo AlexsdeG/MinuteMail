@@ -1,20 +1,15 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Email } from './entities/email.entity';
-import { Alias } from '../aliases/entities/alias.entity';
+import { PrismaService } from '../../prisma/prisma.service';
+import { Email } from '@prisma/client';
 
 @Injectable()
 export class EmailsService {
-  constructor(
-    @InjectRepository(Email)
-    private emailsRepository: Repository<Email>,
-    @InjectRepository(Alias)
-    private aliasesRepository: Repository<Alias>,
-  ) {}
+  constructor(private prisma: PrismaService) {}
 
   async findAllByAlias(aliasId: string, user: any) {
-    const alias = await this.aliasesRepository.findOne({ where: { id: aliasId } });
+    const alias = await this.prisma.alias.findUnique({
+      where: { id: aliasId },
+    });
     if (!alias) throw new NotFoundException('Alias not found');
 
     // Security Check:
@@ -24,19 +19,25 @@ export class EmailsService {
       throw new ForbiddenException('You do not own this alias');
     }
 
-    return this.emailsRepository.find({
-      where: { alias: { id: aliasId } },
-      order: { receivedAt: 'DESC' },
-      select: ['id', 'sender', 'subject', 'receivedAt', 'sizeBytes'], // Exclude body for list view
+    return this.prisma.email.findMany({
+      where: { aliasId },
+      orderBy: { receivedAt: 'desc' },
+      select: {
+        id: true,
+        sender: true,
+        subject: true,
+        receivedAt: true,
+        sizeBytes: true,
+      },
     });
   }
 
   async findOne(id: string, user: any) {
-    const email = await this.emailsRepository.findOne({ 
-      where: { id }, 
-      relations: ['alias'] 
+    const email = await this.prisma.email.findUnique({
+      where: { id },
+      include: { alias: true },
     });
-    
+
     if (!email) throw new NotFoundException('Email not found');
 
     if (email.alias.userId && (!user || email.alias.userId !== user.userId)) {
@@ -48,6 +49,6 @@ export class EmailsService {
 
   async delete(id: string, user: any) {
     const email = await this.findOne(id, user); // Perform lookup & auth check
-    return this.emailsRepository.remove(email);
+    return this.prisma.email.delete({ where: { id } });
   }
 }

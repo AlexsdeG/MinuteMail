@@ -2,11 +2,11 @@ import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import { AppModule } from './../src/app.module';
-import { DataSource } from 'typeorm';
+import { PrismaService } from './../src/prisma/prisma.service';
 
 describe('Database Integration (E2E)', () => {
   let app: INestApplication;
-  let dataSource: DataSource;
+  let prisma: PrismaService;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -16,27 +16,28 @@ describe('Database Integration (E2E)', () => {
     app = moduleFixture.createNestApplication();
     await app.init();
 
-    dataSource = app.get<DataSource>(DataSource);
+    prisma = app.get<PrismaService>(PrismaService);
   });
 
   afterAll(async () => {
     await app.close();
   });
 
-  it('should be connected to the database', () => {
-    expect(dataSource).toBeDefined();
-    expect(dataSource.isInitialized).toBe(true);
+  it('should be connected to the database', async () => {
+    expect(prisma).toBeDefined();
+    // Verify connection by running a simple query
+    const result = await prisma.$queryRaw`SELECT 1 as result`;
+    expect(result).toBeDefined();
   });
 
-  it('should have Users, Aliases, and Emails tables', async () => {
-    const queryRunner = dataSource.createQueryRunner();
-    const tables = await queryRunner.getTables(['users', 'aliases', 'emails']);
-    
-    const tableNames = tables.map(t => t.name);
-    expect(tableNames).toContain('users');
-    expect(tableNames).toContain('aliases');
-    expect(tableNames).toContain('emails');
-    
-    await queryRunner.release();
+  it('should have User, Alias, and Email models', async () => {
+    // Verify that we can query each table without errors
+    const userCount = await prisma.user.count();
+    const aliasCount = await prisma.alias.count();
+    const emailCount = await prisma.email.count();
+
+    expect(userCount).toBeGreaterThanOrEqual(0);
+    expect(aliasCount).toBeGreaterThanOrEqual(0);
+    expect(emailCount).toBeGreaterThanOrEqual(0);
   });
 });

@@ -1,17 +1,12 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { Email } from './entities/email.entity';
 import { EmailsController } from './emails.controller';
 import { EmailsService } from './emails.service';
 import { AliasesModule } from '../aliases/aliases.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Email]),
-    AliasesModule, // Import AliasesModule to use AliasRepository check
-  ],
+  imports: [AliasesModule],
   controllers: [EmailsController],
   providers: [EmailsService],
-  exports: [TypeOrmModule, EmailsService],
+  exports: [EmailsService],
 })
 export class EmailsModule {}

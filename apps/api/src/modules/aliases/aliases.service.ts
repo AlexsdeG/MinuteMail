@@ -1,16 +1,13 @@
 import { Injectable, BadRequestException, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Alias } from './entities/alias.entity';
 import { ConfigService } from '@nestjs/config';
-import { User } from '../users/entities/user.entity';
+import { PrismaService } from '../../prisma/prisma.service';
+import { Alias, User } from '@prisma/client';
 import * as crypto from 'crypto';
 
 @Injectable()
 export class AliasesService {
   constructor(
-    @InjectRepository(Alias)
-    private aliasesRepository: Repository<Alias>,
+    private prisma: PrismaService,
     private configService: ConfigService,
   ) {}
 
@@ -24,7 +21,7 @@ export class AliasesService {
     
     if (customSlug) {
       address = `${customSlug}@${domain}`;
-      const existing = await this.aliasesRepository.findOne({ where: { address } });
+      const existing = await this.prisma.alias.findUnique({ where: { address } });
       if (existing) {
         throw new BadRequestException('Alias is already taken.');
       }
@@ -34,7 +31,7 @@ export class AliasesService {
       while (!isUnique) {
         const randomPart = this.generateRandomString(8);
         address = `${randomPart}@${domain}`;
-        const existing = await this.aliasesRepository.findOne({ where: { address } });
+        const existing = await this.prisma.alias.findUnique({ where: { address } });
         if (!existing) {
           isUnique = true;
         }
@@ -52,30 +49,30 @@ export class AliasesService {
       expiresAt = new Date(now.getTime() + 10 * 60 * 1000);
     }
 
-    const alias = this.aliasesRepository.create({
-      address,
-      expiresAt,
-      user,
-      isActive: true,
+    return this.prisma.alias.create({
+      data: {
+        address,
+        expiresAt,
+        userId: user?.id,
+        isActive: true,
+      },
     });
-
-    return this.aliasesRepository.save(alias);
   }
 
   async findAllForUser(user: User): Promise<Alias[]> {
-    return this.aliasesRepository.find({
-      where: { 
+    return this.prisma.alias.findMany({
+      where: {
         userId: user.id,
-        isActive: true
+        isActive: true,
       },
-      order: {
-        expiresAt: 'DESC'
-      }
+      orderBy: {
+        expiresAt: 'desc',
+      },
     });
   }
 
   async extend(id: string, user: any) {
-    const alias = await this.aliasesRepository.findOne({ where: { id } });
+    const alias = await this.prisma.alias.findUnique({ where: { id } });
     if (!alias) throw new NotFoundException('Alias not found');
 
     // Ownership check
@@ -86,31 +83,37 @@ export class AliasesService {
     const now = new Date();
     const currentExpiry = alias.expiresAt > now ? alias.expiresAt : now;
     
+    let newExpiresAt: Date;
     if (user) {
       // Users can extend up to 1 month max from now
       // Simple logic: Add 7 days
-      alias.expiresAt = new Date(currentExpiry.getTime() + 7 * 24 * 60 * 60 * 1000);
+      newExpiresAt = new Date(currentExpiry.getTime() + 7 * 24 * 60 * 60 * 1000);
     } else {
-      // Guests can extend by 10 mins, max 1 hour total? 
+      // Guests can extend by 10 mins, max 1 hour total?
       // Simplified: Just set to 10 mins from now
-      alias.expiresAt = new Date(now.getTime() + 10 * 60 * 1000);
+      newExpiresAt = new Date(now.getTime() + 10 * 60 * 1000);
     }
-    
-    // Reactivate if expired
-    alias.isActive = true; 
 
-    return this.aliasesRepository.save(alias);
+    return this.prisma.alias.update({
+      where: { id },
+      data: {
+        expiresAt: newExpiresAt,
+        isActive: true,
+      },
+    });
   }
 
   async delete(id: string, user: any) {
-    const alias = await this.aliasesRepository.findOne({ where: { id } });
+    const alias = await this.prisma.alias.findUnique({ where: { id } });
     if (!alias) throw new NotFoundException('Alias not found');
 
     if (alias.userId && (!user || alias.userId !== user.userId)) {
       throw new ForbiddenException('You do not own this alias');
     }
 
-    alias.isActive = false;
-    return this.aliasesRepository.save(alias);
+    return this.prisma.alias.update({
+      where: { id },
+      data: { isActive: false },
+    });
   }
 }

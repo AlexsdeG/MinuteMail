@@ -1,11 +1,9 @@
 import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { SMTPServer, SMTPServerSession } from 'smtp-server';
 import { simpleParser } from 'mailparser';
-import { Alias } from '../aliases/entities/alias.entity';
-import { Email } from '../emails/entities/email.entity';
+import { PrismaService } from '../../prisma/prisma.service';
+import { Alias } from '@prisma/client';
 import { EmailsGateway } from '../gateway/emails.gateway';
 
 interface CustomSession extends SMTPServerSession {
@@ -19,10 +17,7 @@ export class SmtpService implements OnModuleInit, OnModuleDestroy {
 
   constructor(
     private configService: ConfigService,
-    @InjectRepository(Alias)
-    private aliasesRepository: Repository<Alias>,
-    @InjectRepository(Email)
-    private emailsRepository: Repository<Email>,
+    private prisma: PrismaService,
     private emailsGateway: EmailsGateway,
   ) {}
 
@@ -40,13 +35,13 @@ export class SmtpService implements OnModuleInit, OnModuleDestroy {
 
       onRcptTo: async (address, session, cb) => {
         const recipientEmail = address.address;
-        
+
         try {
-          const alias = await this.aliasesRepository.findOne({
-            where: { address: recipientEmail, isActive: true },
+          const alias = await this.prisma.alias.findUnique({
+            where: { address: recipientEmail },
           });
 
-          if (!alias) {
+          if (!alias || !alias.isActive) {
             return cb(new Error('550 Invalid recipient'));
           }
 
@@ -59,7 +54,7 @@ export class SmtpService implements OnModuleInit, OnModuleDestroy {
             customSession.acceptedAliases = [];
           }
           customSession.acceptedAliases.push(alias);
-          
+
           cb();
         } catch (error) {
           this.logger.error(`Error validating recipient ${recipientEmail}`, error);
@@ -89,19 +84,19 @@ export class SmtpService implements OnModuleInit, OnModuleDestroy {
             const approxSize = bodyText.length + bodyHtml.length;
 
             const savePromises = aliases.map(async (alias) => {
-              const newEmail = this.emailsRepository.create({
-                alias: alias,
-                sender: parsed.from?.text || 'unknown',
-                subject: parsed.subject || '(No Subject)',
-                bodyText: bodyText,
-                bodyHtml: bodyHtml,
-                sizeBytes: approxSize,
+              const newEmail = await this.prisma.email.create({
+                data: {
+                  aliasId: alias.id,
+                  sender: parsed.from?.text || 'unknown',
+                  subject: parsed.subject || '(No Subject)',
+                  bodyText: bodyText,
+                  bodyHtml: bodyHtml,
+                  sizeBytes: approxSize,
+                },
               });
-              
-              const savedEmail = await this.emailsRepository.save(newEmail);
-              this.logger.log(`Email saved for alias ${alias.address}`);
 
-              this.emailsGateway.server.to(`alias:${alias.id}`).emit('email_received', savedEmail);
+              this.logger.log(`Email saved for alias ${alias.address}`);
+              this.emailsGateway.server.to(`alias:${alias.id}`).emit('email_received', newEmail);
             });
 
             await Promise.all(savePromises);

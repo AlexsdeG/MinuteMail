@@ -1,0 +1,64 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// User model - represents a registered user of the mail service
+model User {
+  id        String     @id @default(uuid())
+  email     String     @unique
+  password  String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  // Relations
+  aliases   Alias[]
+}
+
+// Alias model - represents a temporary email address
+model Alias {
+  id        String     @id @default(uuid())
+  address   String     @unique
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  expiresAt DateTime
+  isActive  Boolean    @default(true)
+
+  // Foreign key to user (optional - can be anonymous)
+  userId    String?
+  user      User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  // Relations
+  emails    Email[]
+
+  @@index([userId])
+  @@index([address])
+  @@index([expiresAt])
+}
+
+// Email model - represents a received email
+model Email {
+  id        String    @id @default(uuid())
+  sender    String
+  subject   String?
+  bodyText  String?
+  bodyHtml  String?
+  sizeBytes Int       @default(0)
+  receivedAt DateTime  @default(now())
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  // Foreign key to alias
+  aliasId   String
+  alias     Alias     @relation(fields: [aliasId], references: [id], onDelete: Cascade)
+
+  @@index([aliasId])
+  @@index([receivedAt])
+}

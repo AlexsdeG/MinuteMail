@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { envSchema } from './config/env.schema';
+import { PrismaModule } from './prisma/prisma.module';
 import { UsersModule } from './modules/users/users.module';
 import { AliasesModule } from './modules/aliases/aliases.module';
 import { EmailsModule } from './modules/emails/emails.module';
@@ -18,20 +18,7 @@ import { CleanupModule } from './modules/cleanup/cleanup.module';
       isGlobal: true,
       validationSchema: envSchema,
     }),
-    TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        type: 'postgres',
-        host: config.get<string>('POSTGRES_HOST'),
-        port: config.get<number>('POSTGRES_PORT'),
-        username: config.get<string>('POSTGRES_USER'),
-        password: config.get<string>('POSTGRES_PASSWORD'),
-        database: config.get<string>('POSTGRES_DB'),
-        entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: true, // Auto-create tables (Dev only)
-      }),
-    }),
+    PrismaModule,
     // Rate Limiting: 5 requests per 60 seconds
     ThrottlerModule.forRoot([{
       ttl: 60000,
