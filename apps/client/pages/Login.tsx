@@ -49,6 +49,14 @@ const Login: React.FC = () => {
             {error && <div className="text-sm text-red-500 font-medium">{error}</div>}
             <Button type="submit" className="w-full" isLoading={isLoading}>Sign In</Button>
           </form>
+          {import.meta.env.VITE_REGISTER === 'true' && (
+            <div className="mt-4 text-center text-sm">
+              <span className="text-slate-500">Don't have an account? </span>
+              <button onClick={() => navigate('/register')} className="text-blue-600 font-medium hover:underline">
+                Sign Up
+              </button>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

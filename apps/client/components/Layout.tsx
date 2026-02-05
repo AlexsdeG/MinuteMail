@@ -39,9 +39,11 @@ const Layout: React.FC = () => {
                 <Link to="/login" className="text-sm font-medium text-slate-600 hover:text-slate-900">
                   Login
                 </Link>
-                <Link to="/register" className="text-sm font-medium px-4 py-2 bg-slate-900 text-white rounded-md hover:bg-slate-800 transition-colors">
-                  Sign Up
-                </Link>
+                {import.meta.env.VITE_REGISTER === 'true' && (
+                  <Link to="/register" className="text-sm font-medium px-4 py-2 bg-slate-900 text-white rounded-md hover:bg-slate-800 transition-colors">
+                    Sign Up
+                  </Link>
+                )}
               </>
             )}
           </nav>

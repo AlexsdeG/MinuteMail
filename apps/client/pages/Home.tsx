@@ -42,9 +42,11 @@ const Home: React.FC = () => {
           <Button size="lg" onClick={handleCreateGuestAlias} isLoading={isLoading} className="w-full sm:w-auto">
             Create Temporary Email <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
-          <Button variant="outline" size="lg" onClick={() => navigate('/register')} className="w-full sm:w-auto">
-            Create Account
-          </Button>
+          {import.meta.env.VITE_REGISTER === 'true' && (
+            <Button variant="outline" size="lg" onClick={() => navigate('/register')} className="w-full sm:w-auto">
+              Create Account
+            </Button>
+          )}
         </div>
       </section>
 

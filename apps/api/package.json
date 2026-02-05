@@ -1,6 +1,6 @@
 {
   "name": "api",
-  "version": "0.0.7",
+  "version": "0.1.0",
   "description": "NestJS Backend for 10-Min Mail Service",
   "author": "",
   "private": true,
