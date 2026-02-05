@@ -1,0 +1,5 @@
+{
+  "name": "10-Min Mail Service",
+  "description": "A secure, temporary email service offering disposable aliases with real-time updates.",
+  "requestFramePermissions": []
+}
