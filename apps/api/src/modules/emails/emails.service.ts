@@ -15,7 +15,8 @@ export class EmailsService {
     // Security Check:
     // 1. If Alias belongs to a user, requester MUST be that user.
     // 2. If Alias is anonymous (Guest), anyone with the ID can read (Standard Disposable Mail behavior).
-    if (alias.userId && (!user || alias.userId !== user.userId)) {
+    const requester = user?.userId ?? user?.id ?? null;
+    if (alias.userId && (!requester || alias.userId !== requester)) {
       throw new ForbiddenException('You do not own this alias');
     }
 
@@ -40,7 +41,8 @@ export class EmailsService {
 
     if (!email) throw new NotFoundException('Email not found');
 
-    if (email.alias.userId && (!user || email.alias.userId !== user.userId)) {
+    const requester = user?.userId ?? user?.id ?? null;
+    if (email.alias.userId && (!requester || email.alias.userId !== requester)) {
       throw new ForbiddenException('Access denied');
     }
 

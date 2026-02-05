@@ -15,6 +15,10 @@ export class AliasesService {
     return crypto.randomBytes(Math.ceil(length / 2)).toString('hex').slice(0, length);
   }
 
+  private requesterId(user: any) {
+    return user?.userId ?? user?.id ?? null;
+  }
+
   async create(user: User | null, customSlug?: string): Promise<Alias> {
     const domain = this.configService.get<string>('DOMAIN');
     let address = '';
@@ -53,16 +57,17 @@ export class AliasesService {
       data: {
         address,
         expiresAt,
-        userId: user?.id,
+        userId: this.requesterId(user),
         isActive: true,
       },
     });
   }
 
   async findAllForUser(user: User): Promise<Alias[]> {
+    const id = this.requesterId(user);
     return this.prisma.alias.findMany({
       where: {
-        userId: user.id,
+        userId: id,
         isActive: true,
       },
       orderBy: {
@@ -76,7 +81,8 @@ export class AliasesService {
     if (!alias) throw new NotFoundException('Alias not found');
 
     // Ownership check
-    if (alias.userId && (!user || alias.userId !== user.userId)) {
+    const requester = this.requesterId(user);
+    if (alias.userId && (!requester || alias.userId !== requester)) {
       throw new ForbiddenException('You do not own this alias');
     }
 
@@ -107,7 +113,8 @@ export class AliasesService {
     const alias = await this.prisma.alias.findUnique({ where: { id } });
     if (!alias) throw new NotFoundException('Alias not found');
 
-    if (alias.userId && (!user || alias.userId !== user.userId)) {
+    const requester = this.requesterId(user);
+    if (alias.userId && (!requester || alias.userId !== requester)) {
       throw new ForbiddenException('You do not own this alias');
     }
 
