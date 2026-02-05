@@ -123,4 +123,16 @@ export class AliasesService {
       data: { isActive: false },
     });
   }
+
+  async findOne(id: string, user: any) {
+    const alias = await this.prisma.alias.findUnique({ where: { id } });
+    if (!alias) throw new NotFoundException('Alias not found');
+
+    const requester = this.requesterId(user);
+    if (alias.userId && (!requester || alias.userId !== requester)) {
+      throw new ForbiddenException('You do not own this alias');
+    }
+
+    return alias;
+  }
 }

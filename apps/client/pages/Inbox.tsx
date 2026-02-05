@@ -29,20 +29,14 @@ const Inbox: React.FC = () => {
       }
     }
 
-    // Fallback: Fetch from API (Scenario: Shared link or User Dashboard nav)
+    // Fallback: Fetch from API
     const fetchAlias = async () => {
       try {
-        // Assuming we have an endpoint to get specific alias details
-        // Or we might list aliases and find one. 
-        // For Phase 2 we mainly focus on Guest flow which uses LocalStorage largely
-        // But let's mock a fetch if needed or handle 404
-        if (!alias) {
-            // Placeholder: In a real app we'd fetch GET /aliases/:id
-            // setAlias(response.data);
-            setLoading(false);
-        }
+        const response = await api.get<Alias>(`/aliases/${aliasId}`);
+        setAlias(response.data);
       } catch (error) {
         console.error("Failed to fetch alias", error);
+      } finally {
         setLoading(false);
       }
     };

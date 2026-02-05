@@ -29,6 +29,12 @@ export class AliasesController {
   }
 
   @UseGuards(OptionalJwtAuthGuard)
+  @Get(':id')
+  async findOne(@Request() req, @Param('id', ParseUUIDPipe) id: string) {
+    return this.aliasesService.findOne(id, req.user);
+  }
+
+  @UseGuards(OptionalJwtAuthGuard)
   @Delete(':id')
   async delete(@Request() req, @Param('id', ParseUUIDPipe) id: string) {
     return this.aliasesService.delete(id, req.user);

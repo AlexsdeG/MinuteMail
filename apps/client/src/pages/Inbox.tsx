@@ -27,17 +27,33 @@ const Inbox: React.FC = () => {
   // 1. Fetch Alias Details
   useEffect(() => {
     const fetchAlias = async () => {
-      const stored = localStorage.getItem('guest_alias');
-      if (stored) {
-        try {
-          const parsed: Alias = JSON.parse(stored);
-          if (parsed.id === aliasId) {
-            setAlias(parsed);
-            setLoadingAlias(false);
+      setLoadingAlias(true);
+      try {
+        const stored = localStorage.getItem('guest_alias');
+        if (stored) {
+          try {
+            const parsed: Alias = JSON.parse(stored);
+            if (parsed.id === aliasId) {
+              setAlias(parsed);
+              setLoadingAlias(false);
+              return;
+            }
+          } catch (e) { console.error(e); }
+        }
+
+        // If not found in localStorage, fetch from API
+        if (aliasId) {
+          const res = await api.get<Alias>(`/aliases/${aliasId}`);
+          if (res?.data) {
+            setAlias(res.data);
+            try { localStorage.setItem('guest_alias', JSON.stringify(res.data)); } catch(e) { /* ignore */ }
           }
-        } catch (e) { console.error(e); }
+        }
+      } catch (err) {
+        console.error('Failed to load alias', err);
+      } finally {
+        setLoadingAlias(false);
       }
-      setLoadingAlias(false); 
     };
     fetchAlias();
   }, [aliasId]);
