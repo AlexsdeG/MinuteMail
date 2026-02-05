@@ -115,7 +115,7 @@ importers:
         specifier: ^20.3.1
         version: 20.19.32
       '@types/nodemailer':
-        specifier: ^6.4.14
+        specifier: ^6.4.22
         version: 6.4.22
       '@types/passport-jwt':
         specifier: ^3.0.0
@@ -151,7 +151,7 @@ importers:
         specifier: ^29.5.0
         version: 29.7.0(@types/node@20.19.32)(ts-node@10.9.2(@types/node@20.19.32)(typescript@5.8.3))
       nodemailer:
-        specifier: ^6.9.7
+        specifier: ^6.10.1
         version: 6.10.1
       prettier:
         specifier: ^3.0.0

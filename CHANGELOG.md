@@ -2,6 +2,34 @@
 
 All notable changes to the MinuteMail monorepo will be documented in this file.
 
+## [0.2.4] - 2026-02-05
+
+### Added
+- **Settings Page**: New account management page with profile display, password change, and email change functionality
+- **Master Admin System**: First registered user automatically becomes master admin with special privileges
+- **Invite System**: Master admin can create time-limited invite links to allow registration even when disabled
+  - Invite links can be restricted to specific email addresses
+  - Invites can be revoked and tracked (used/expired status)
+- **Email Sender Service**: Nodemailer-based email service for sending verification and invite emails (SMTP config required)
+- Settings link added to navigation header for logged-in users
+
+### Changed
+- Registration page now supports invite token query parameter (`?invite=TOKEN`)
+- Auth response now includes `isMasterAdmin` flag for frontend access control
+- User model extended with `isMasterAdmin` and `emailVerified` fields
+
+### Database
+- Added `isMasterAdmin` (Boolean) field to User model - first user defaults to true
+- Added `emailVerified` (Boolean) field to User model
+- Added `InviteToken` model for invite link management
+
+### Environment Variables (New)
+- `SMTP_HOST` - SMTP server hostname
+- `SMTP_MAIL_PORT` - SMTP server port
+- `SMTP_USER` - SMTP username
+- `SMTP_PASS` - SMTP password
+- `SMTP_FROM` - Default from email address
+
 ## [0.2.3] - 2026-02-05
 
 ### Added

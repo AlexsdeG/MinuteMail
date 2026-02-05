@@ -27,6 +27,13 @@ JWT_SECRET=super_secret_key
 # Application Configuration
 DOMAIN=localhost
 REGISTER=false
+
+# SMTP Configuration
+SMTP_HOST=smtp.example.com
+SMTP_MAIL_PORT=587
+SMTP_USER=user@example.com
+SMTP_PASS=password
+SMTP_FROM=noreply@example.com
 ```
 
 ### Quick Start

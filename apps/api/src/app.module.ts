@@ -13,6 +13,9 @@ import { GatewayModule } from './modules/gateway/gateway.module';
 import { CleanupModule } from './modules/cleanup/cleanup.module';
 import { RedisModule } from './modules/redis/redis.module';
 import { StatusModule } from './modules/status/status.module';
+import { SettingsModule } from './modules/settings/settings.module';
+import { InvitesModule } from './modules/invites/invites.module';
+import { EmailSenderModule } from './modules/email-sender/email-sender.module';
 
 @Module({
   imports: [
@@ -36,6 +39,9 @@ import { StatusModule } from './modules/status/status.module';
     CleanupModule,
     RedisModule,
     StatusModule,
+    SettingsModule,
+    InvitesModule,
+    EmailSenderModule,
   ],
   controllers: [],
   providers: [],

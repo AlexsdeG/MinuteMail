@@ -26,6 +26,7 @@ export class AuthService {
       user: {
         id: user.id,
         email: user.email,
+        isMasterAdmin: user.isMasterAdmin || false,
       },
     };
   }

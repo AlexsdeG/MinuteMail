@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet, Link, useNavigate } from 'react-router-dom';
-import { Mail, User as UserIcon, LogOut } from 'lucide-react';
+import { Mail, User as UserIcon, LogOut, Settings } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import Button from './Button';
 
@@ -28,6 +28,10 @@ const Layout: React.FC = () => {
                 <Link to="/dashboard" className="flex items-center text-sm font-medium text-slate-600 hover:text-slate-900">
                   <UserIcon className="h-4 w-4 mr-2" />
                   Dashboard
+                </Link>
+                <Link to="/settings" className="flex items-center text-sm font-medium text-slate-600 hover:text-slate-900">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Settings
                 </Link>
                 <Button variant="ghost" size="sm" onClick={handleLogout}>
                   <LogOut className="h-4 w-4 mr-2" />

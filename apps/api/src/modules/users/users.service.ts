@@ -13,16 +13,29 @@ export class UsersService {
       throw new ConflictException('User already exists');
     }
 
+    // Check if this is the first user - make them master admin
+    const userCount = await this.prisma.user.count();
+    const isMasterAdmin = userCount === 0;
+
     const salt = await bcrypt.genSalt();
     const password = await bcrypt.hash(pass, salt);
 
     return this.prisma.user.create({
-      data: { email, password },
+      data: { 
+        email, 
+        password,
+        isMasterAdmin,
+      },
     });
   }
 
   async findByEmail(email: string): Promise<User | undefined> {
     const user = await this.prisma.user.findUnique({ where: { email } });
+    return user || undefined;
+  }
+
+  async findById(id: string): Promise<User | undefined> {
+    const user = await this.prisma.user.findUnique({ where: { id } });
     return user || undefined;
   }
 }
