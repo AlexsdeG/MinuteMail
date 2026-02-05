@@ -1,118 +1,248 @@
-import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useEffect, useState, useCallback } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Card } from '../components/Card';
-import Timer from '../components/Timer';
-import { Alias } from '../types';
-import Button from '../components/Button';
-import { Copy, RefreshCw } from 'lucide-react';
+import InboxToolbar from '../components/InboxToolbar';
+import EmailList from '../components/EmailList';
+import EmailViewer from '../components/EmailViewer';
+import { Alias, Email, ExtendDuration } from '../types';
 import api from '../api/axios';
 
 const Inbox: React.FC = () => {
   const { aliasId } = useParams<{ aliasId: string }>();
+  const navigate = useNavigate();
   const [alias, setAlias] = useState<Alias | null>(null);
+  const [emails, setEmails] = useState<Email[]>([]);
+  const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [emailsLoading, setEmailsLoading] = useState(false);
+  const [copiedToast, setCopiedToast] = useState(false);
 
-  useEffect(() => {
-    // Try to get from local storage first (fast load for guests)
-    const stored = localStorage.getItem('guest_alias');
-    if (stored) {
-      try {
-        const parsed: Alias = JSON.parse(stored);
-        if (parsed.id === aliasId) {
-          setAlias(parsed);
-          setLoading(false);
-          // Optional: Re-verify with API in background
-          return;
-        }
-      } catch (e) {
-        console.error("Error parsing stored alias", e);
-      }
+  // Fetch alias details
+  const fetchAlias = useCallback(async () => {
+    if (!aliasId) return;
+    try {
+      const response = await api.get<Alias>(`/aliases/${aliasId}`);
+      setAlias(response.data);
+    } catch (error) {
+      console.error('Failed to fetch alias', error);
+      navigate('/dashboard');
+    } finally {
+      setLoading(false);
     }
+  }, [aliasId, navigate]);
 
-    // Fallback: Fetch from API
-    const fetchAlias = async () => {
-      try {
-        const response = await api.get<Alias>(`/aliases/${aliasId}`);
-        setAlias(response.data);
-      } catch (error) {
-        console.error("Failed to fetch alias", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAlias();
+  // Fetch emails for alias
+  const fetchEmails = useCallback(async () => {
+    if (!aliasId) return;
+    setEmailsLoading(true);
+    try {
+      const response = await api.get<Email[]>(`/aliases/${aliasId}/emails`);
+      setEmails(response.data);
+    } catch (error) {
+      console.error('Failed to fetch emails', error);
+    } finally {
+      setEmailsLoading(false);
+    }
   }, [aliasId]);
 
+  useEffect(() => {
+    fetchAlias();
+    fetchEmails();
+  }, [fetchAlias, fetchEmails]);
+
+  // Poll for new emails every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(fetchEmails, 30000);
+    return () => clearInterval(interval);
+  }, [fetchEmails]);
+
+  const handleRefresh = () => {
+    fetchAlias();
+    fetchEmails();
+  };
+
   const handleCopy = () => {
-    if (alias?.address) {
-      navigator.clipboard.writeText(alias.address);
-      // Could show toast here
+    setCopiedToast(true);
+    setTimeout(() => setCopiedToast(false), 2000);
+  };
+
+  const handleExtend = async (duration: ExtendDuration) => {
+    if (!aliasId) return;
+    try {
+      const response = await api.patch<Alias>(`/aliases/${aliasId}/extend`, { duration });
+      setAlias(response.data);
+    } catch (error) {
+      console.error('Failed to extend alias', error);
+      alert('Failed to extend time');
     }
   };
 
+  const handleTogglePause = async () => {
+    if (!aliasId) return;
+    try {
+      const response = await api.patch<Alias>(`/aliases/${aliasId}/pause`);
+      setAlias(response.data);
+    } catch (error) {
+      console.error('Failed to toggle pause', error);
+      alert('Failed to toggle pause');
+    }
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedIds.size === 0) return;
+    try {
+      await api.delete('/emails', { data: { ids: Array.from(selectedIds) } });
+      setEmails((prev) => prev.filter((e) => !selectedIds.has(e.id)));
+      setSelectedIds(new Set());
+      if (selectedEmail && selectedIds.has(selectedEmail.id)) {
+        setSelectedEmail(null);
+      }
+    } catch (error) {
+      console.error('Failed to delete emails', error);
+      alert('Failed to delete emails');
+    }
+  };
+
+  const handleDownloadSelected = () => {
+    // Download each selected email
+    selectedIds.forEach((id) => {
+      window.open(`${import.meta.env.VITE_API_URL}/emails/${id}/download`, '_blank');
+    });
+  };
+
+  const handleSelect = (id: string, isSelected: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (isSelected) {
+        next.add(id);
+      } else {
+        next.delete(id);
+      }
+      return next;
+    });
+  };
+
+  const handleSelectAll = (selectAll: boolean) => {
+    if (selectAll) {
+      setSelectedIds(new Set(emails.map((e) => e.id)));
+    } else {
+      setSelectedIds(new Set());
+    }
+  };
+
+  const handleEmailClick = async (email: Email) => {
+    setSelectedEmail(email);
+    // Fetch full email content
+    try {
+      const response = await api.get<Email>(`/emails/${email.id}`);
+      setSelectedEmail(response.data);
+      // Update list to show as read
+      setEmails((prev) =>
+        prev.map((e) => (e.id === email.id ? { ...e, isRead: true } : e))
+      );
+    } catch (error) {
+      console.error('Failed to fetch email', error);
+    }
+  };
+
+  const handleMarkRead = async (id: string, isRead: boolean) => {
+    try {
+      await api.patch(`/emails/${id}/read`, { isRead });
+      setEmails((prev) =>
+        prev.map((e) => (e.id === id ? { ...e, isRead } : e))
+      );
+      if (selectedEmail?.id === id) {
+        setSelectedEmail((prev) => (prev ? { ...prev, isRead } : prev));
+      }
+    } catch (error) {
+      console.error('Failed to mark email', error);
+    }
+  };
+
+  const handleDeleteSingle = async (id: string) => {
+    try {
+      await api.delete(`/emails/${id}`);
+      setEmails((prev) => prev.filter((e) => e.id !== id));
+      if (selectedEmail?.id === id) {
+        setSelectedEmail(null);
+      }
+    } catch (error) {
+      console.error('Failed to delete email', error);
+      alert('Failed to delete email');
+    }
+  };
+
+  const handleDownloadSingle = (id: string) => {
+    window.open(`${import.meta.env.VITE_API_URL}/emails/${id}/download`, '_blank');
+  };
+
   if (loading && !alias) {
-     return <div className="flex items-center justify-center h-64">Loading inbox...</div>;
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Inbox Header / Controls */}
-      <div className="bg-white p-4 rounded-lg shadow-sm border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex flex-col space-y-1">
-          <span className="text-sm text-slate-500 font-medium">Temporary Email Address</span>
-          <div className="flex items-center space-x-2">
-            <h2 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">
-              {alias?.address || 'Loading...'}
-            </h2>
-            <Button variant="ghost" size="sm" onClick={handleCopy} title="Copy to clipboard">
-              <Copy className="h-4 w-4" />
-            </Button>
-          </div>
+    <div className="space-y-4">
+      {/* Toast notification */}
+      {copiedToast && (
+        <div className="fixed top-4 right-4 bg-slate-900 text-white px-4 py-2 rounded-lg shadow-lg z-50 animate-fade-in">
+          Copied to clipboard!
         </div>
+      )}
 
-        <div className="flex items-center space-x-4">
-           {alias?.expiresAt && (
-             <div className="flex flex-col items-end">
-                <span className="text-xs text-slate-400 mb-1">Expires in</span>
-                <Timer 
-                  expiresAt={alias.expiresAt} 
-                  onExpire={() => alert("This email has expired!")} 
-                />
-             </div>
-           )}
-           <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
-             <RefreshCw className="h-4 w-4 mr-2" /> Refresh
-           </Button>
-        </div>
-      </div>
+      {/* Toolbar */}
+      {alias && (
+        <InboxToolbar
+          aliasAddress={alias.address}
+          expiresAt={alias.expiresAt}
+          createdAt={alias.createdAt}
+          isPaused={alias.isPaused}
+          selectedCount={selectedIds.size}
+          onRefresh={handleRefresh}
+          onCopy={handleCopy}
+          onDelete={handleDeleteSelected}
+          onDownload={handleDownloadSelected}
+          onExtend={handleExtend}
+          onTogglePause={handleTogglePause}
+          isLoading={emailsLoading}
+        />
+      )}
 
-      {/* Main Content Area */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[70vh]">
-        {/* Email List */}
-        <Card className="lg:col-span-1 border-r flex flex-col">
-          <div className="p-4 border-b bg-slate-50/50">
-             <h3 className="font-semibold text-sm uppercase tracking-wider text-slate-500">Messages</h3>
-          </div>
-          <div className="flex-1 p-8 text-center text-slate-500 flex items-center justify-center">
-             <span>Waiting for emails...</span>
-          </div>
+      {/* Main content */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-[calc(100vh-240px)] min-h-[500px]">
+        {/* Email list */}
+        <Card className="lg:col-span-1 flex flex-col overflow-hidden">
+          <EmailList
+            emails={emails}
+            selectedIds={selectedIds}
+            onSelect={handleSelect}
+            onSelectAll={handleSelectAll}
+            onEmailClick={handleEmailClick}
+            onDelete={handleDeleteSingle}
+            onDownload={handleDownloadSingle}
+            activeEmailId={selectedEmail?.id}
+            isLoading={emailsLoading && emails.length === 0}
+          />
         </Card>
 
-        {/* Email Viewer */}
-        <Card className="lg:col-span-2 flex items-center justify-center bg-slate-50">
-          <div className="text-slate-400 flex flex-col items-center">
-            <MailIcon className="h-12 w-12 mb-2 opacity-20" />
-            Select an email to view
-          </div>
+        {/* Email viewer */}
+        <Card className="lg:col-span-2 overflow-hidden">
+          <EmailViewer
+            email={selectedEmail}
+            aliasAddress={alias?.address}
+            aliasExpiresAt={alias?.expiresAt}
+            onMarkRead={handleMarkRead}
+            onDelete={handleDeleteSingle}
+            onDownload={handleDownloadSingle}
+          />
         </Card>
       </div>
     </div>
   );
 };
-
-const MailIcon = ({className}: {className?: string}) => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-)
 
 export default Inbox;

@@ -1,9 +1,10 @@
-import { Controller, Post, Get, Patch, Delete, UseGuards, Request, Body, Param, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Post, Get, Patch, Delete, UseGuards, Request, Body, Param, ParseUUIDPipe, Query } from '@nestjs/common';
 import { AliasesService } from './aliases.service';
 import { OptionalJwtAuthGuard } from '../auth/optional-jwt.guard';
 import { AuthGuard } from '@nestjs/passport';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { CreateAliasDto } from './dto/create-alias.dto';
+import { ExtendAliasDto } from './dto/extend-alias.dto';
 
 @Controller('aliases')
 export class AliasesController {
@@ -19,13 +20,35 @@ export class AliasesController {
   @UseGuards(AuthGuard('jwt'))
   @Get()
   async findAll(@Request() req) {
-    return this.aliasesService.findAllForUser(req.user);
+    // Returns aliases with unread count
+    return this.aliasesService.findAllWithUnreadCount(req.user);
+  }
+
+  @Get('check/:slug')
+  async checkSlug(@Param('slug') slug: string) {
+    return this.aliasesService.checkSlugAvailability(slug);
   }
 
   @UseGuards(OptionalJwtAuthGuard)
   @Patch(':id/extend')
-  async extend(@Request() req, @Param('id', ParseUUIDPipe) id: string) {
-    return this.aliasesService.extend(id, req.user);
+  async extend(
+    @Request() req,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() extendDto: ExtendAliasDto,
+  ) {
+    return this.aliasesService.extend(id, req.user, extendDto.duration);
+  }
+
+  @UseGuards(OptionalJwtAuthGuard)
+  @Patch(':id/pause')
+  async togglePause(@Request() req, @Param('id', ParseUUIDPipe) id: string) {
+    return this.aliasesService.togglePause(id, req.user);
+  }
+
+  @UseGuards(OptionalJwtAuthGuard)
+  @Get(':id/unread-count')
+  async getUnreadCount(@Request() req, @Param('id', ParseUUIDPipe) id: string) {
+    return this.aliasesService.getUnreadCount(id, req.user);
   }
 
   @UseGuards(OptionalJwtAuthGuard)

@@ -30,6 +30,7 @@ model Alias {
   updatedAt DateTime   @updatedAt
   expiresAt DateTime
   isActive  Boolean    @default(true)
+  isPaused  Boolean    @default(false)  // Drop incoming emails when true
 
   // Foreign key to user (optional - can be anonymous)
   userId    String?
@@ -54,6 +55,7 @@ model Email {
   receivedAt DateTime  @default(now())
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
+  isRead    Boolean   @default(false)
 
   // Foreign key to alias
   aliasId   String
@@ -61,4 +63,13 @@ model Email {
 
   @@index([aliasId])
   @@index([receivedAt])
+}
+
+// Track used alias addresses for custom naming uniqueness
+model UsedAddress {
+  id        String   @id @default(uuid())
+  address   String   @unique
+  createdAt DateTime @default(now())
+
+  @@index([address])
 }

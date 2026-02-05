@@ -16,6 +16,8 @@ export interface Alias {
   createdAt?: string;
   expiresAt: string;
   isActive: boolean;
+  isPaused?: boolean;
+  unreadCount?: number;
 }
 
 export interface Email {
@@ -26,4 +28,9 @@ export interface Email {
   bodyText?: string;
   bodyHtml?: string;
   receivedAt: string;
+  isRead?: boolean;
+  sizeBytes?: number;
 }
+
+export type ExtendDuration = '10min' | '1hour' | '1day' | '1week' | '1month';
+
