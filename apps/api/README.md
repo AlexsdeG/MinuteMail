@@ -64,6 +64,32 @@ SMTP_FROM=noreply@example.com
 - `pnpm run test:e2e` - Run end-to-end tests
 - `pnpm run test:infra` - Test database connection
 
+### Docker Support
+
+You can run the API, PostgreSQL, and Redis using Docker Compose:
+
+1. **Configure Environment**
+   - The `docker-compose.yml` uses pre-configured values for local services.
+   - You can override SMTP settings in the `environment` section or via a `.env` file.
+
+2. **Start Services**
+   ```bash
+   docker-compose up -d --build
+   ```
+
+3. **Check Status**
+   ```bash
+   docker-compose ps
+   docker-compose logs -f api
+   ```
+
+4. **Ports**
+   - API: `3010`
+   - Incoming SMTP: `578` (as requested)
+   - PostgreSQL: `5432`
+   - Redis: `6379`
+
+
 ### Prisma Commands
 
 - `pnpm dlx prisma generate` - Generate Prisma Client

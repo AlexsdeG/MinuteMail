@@ -22,30 +22,32 @@ async function main() {
   console.log('Created user:', user);
 
   // Optionally create test aliases
-  const alias = await prisma.alias.create({
-    data: {
+  const alias = await prisma.alias.upsert({
+    where: { address: 'test@localhost' },
+    update: {},
+    create: {
       address: 'test@localhost',
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
       userId: user.id,
       isActive: true,
+      emails: {
+        create: {
+          sender: 'sender@example.com',
+          subject: 'Test Email',
+          bodyText: 'This is a test email',
+          bodyHtml: '<p>This is a test email</p>',
+          sizeBytes: 100,
+        },
+      },
     },
   });
 
   console.log('Created alias:', alias);
 
   // Optionally create a test email
-  const email = await prisma.email.create({
-    data: {
-      aliasId: alias.id,
-      sender: 'sender@example.com',
-      subject: 'Test Email',
-      bodyText: 'This is a test email',
-      bodyHtml: '<p>This is a test email</p>',
-      sizeBytes: 100,
-    },
-  });
 
-  console.log('Created email:', email);
+
+
 }
 
 main()

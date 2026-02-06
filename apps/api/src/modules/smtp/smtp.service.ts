@@ -109,10 +109,11 @@ export class SmtpService implements OnModuleInit, OnModuleDestroy {
       },
     });
 
-    const port = this.configService.get<number>('SMTP_PORT');
+    const port = this.configService.get<number>('SMTP_INCOMING_PORT') || this.configService.get<number>('SMTP_PORT') || 578;
     this.server.listen(port, () => {
       this.logger.log(`SMTP Server listening on port ${port}`);
     });
+
 
     this.server.on('error', (err) => {
       this.logger.error('SMTP Server Error', err);
