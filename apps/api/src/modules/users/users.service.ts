@@ -5,7 +5,7 @@ import { User } from '@prisma/client';
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async create(email: string, pass: string): Promise<User> {
     const existingUser = await this.prisma.user.findUnique({ where: { email } });
@@ -13,16 +13,18 @@ export class UsersService {
       throw new ConflictException('User already exists');
     }
 
-    // Check if this is the first user - make them master admin
-    const userCount = await this.prisma.user.count();
-    const isMasterAdmin = userCount === 0;
+    // Check if any master admin exists - the first user to register becomes master admin
+    const adminCount = await this.prisma.user.count({
+      where: { isMasterAdmin: true }
+    });
+    const isMasterAdmin = adminCount === 0;
 
     const salt = await bcrypt.genSalt();
     const password = await bcrypt.hash(pass, salt);
 
     return this.prisma.user.create({
-      data: { 
-        email, 
+      data: {
+        email,
         password,
         isMasterAdmin,
       },
