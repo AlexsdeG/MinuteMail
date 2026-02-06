@@ -67,8 +67,8 @@ export class EmailSenderService {
   }
 
   async sendPasswordResetEmail(to: string, token: string): Promise<void> {
-    const domain = this.configService.get<string>('CLIENT_URL') || 'localhost';
-    const resetUrl = `https://${domain}/reset-password?token=${token}`;
+    const clientUrl = this.configService.get<string>('CLIENT_URL');
+    const resetUrl = `${clientUrl}/#/reset-password?token=${token}`;
 
     try {
       await this.transporter.sendMail({

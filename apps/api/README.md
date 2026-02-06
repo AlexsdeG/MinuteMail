@@ -26,6 +26,7 @@ JWT_SECRET=super_secret_key
 
 # Application Configuration
 CLIENT_URL=your-client-url
+DOMAIN=your-domain
 REGISTER=false
 
 # SMTP Configuration

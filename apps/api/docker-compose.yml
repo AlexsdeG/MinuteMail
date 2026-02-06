@@ -19,6 +19,7 @@ services:
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       - CORS_ORIGINS=${CORS_ORIGINS}
       - CLIENT_URL=${CLIENT_URL}
+      - DOMAIN=${DOMAIN}
     depends_on:
       - postgres
       - redis

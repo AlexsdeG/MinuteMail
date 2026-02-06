@@ -18,7 +18,7 @@ export class AliasesService {
   constructor(
     private prisma: PrismaService,
     private configService: ConfigService,
-  ) {}
+  ) { }
 
   private generateRandomString(length: number): string {
     return crypto.randomBytes(Math.ceil(length / 2)).toString('hex').slice(0, length);
@@ -29,9 +29,9 @@ export class AliasesService {
   }
 
   async create(user: User | null, customSlug?: string): Promise<Alias> {
-    const domain = this.configService.get<string>('CLIENT_URL');
+    const domain = this.configService.get<string>('DOMAIN');
     let address = '';
-    
+
     if (customSlug) {
       address = `${customSlug}@${domain}`;
       // Check both active aliases and historical UsedAddress table
@@ -39,7 +39,7 @@ export class AliasesService {
         this.prisma.alias.findUnique({ where: { address } }),
         this.prisma.usedAddress.findUnique({ where: { address } }),
       ]);
-      
+
       if (existingAlias || usedAddress) {
         throw new BadRequestException('Alias is already taken or was used before.');
       }
@@ -175,16 +175,16 @@ export class AliasesService {
 
     const now = new Date();
     const currentExpiry = alias.expiresAt > now ? alias.expiresAt : now;
-    
+
     // Get duration in ms, default to 1 hour
     const durationMs = DURATIONS[duration] || DURATIONS['1hour'];
-    
+
     // Apply limits based on user type
     let newExpiresAt: Date;
     if (user) {
       // Registered users: add the selected duration
       newExpiresAt = new Date(currentExpiry.getTime() + durationMs);
-      
+
       // Cap at 3 months max from now
       const maxExpiry = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
       if (newExpiresAt > maxExpiry) {

@@ -13,5 +13,6 @@ export const envSchema = Joi.object({
   JWT_SECRET: Joi.string().required(),
   REGISTER: Joi.boolean().default(false),
   CLIENT_URL: Joi.string().uri().required(),
+  DOMAIN: Joi.string().required(),
   CORS_ORIGINS: Joi.string().optional(),
 });

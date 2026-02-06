@@ -186,7 +186,7 @@ const Inbox: React.FC = () => {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 flex-1 h-full flex flex-col">
       {/* Toast notification */}
       {copiedToast && (
         <div className="fixed top-4 right-4 bg-slate-900 text-white px-4 py-2 rounded-lg shadow-lg z-50 animate-fade-in">
@@ -213,7 +213,7 @@ const Inbox: React.FC = () => {
       )}
 
       {/* Main content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-[calc(100vh-240px)] min-h-[500px]">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1 h-full min-h-[500px]">
         {/* Email list */}
         <Card className="lg:col-span-1 flex flex-col overflow-hidden">
           <EmailList

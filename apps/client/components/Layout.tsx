@@ -14,14 +14,14 @@ const Layout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-50">
+    <div className="h-screen flex flex-col overflow-hidden">
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-50 flex-shrink-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center space-x-2 text-primary hover:text-blue-700 transition-colors">
             <Mail className="h-6 w-6" />
             <span className="text-xl font-bold tracking-tight">10-Min Mail</span>
           </Link>
-          
+
           <nav className="flex items-center space-x-4">
             {user ? (
               <>
@@ -54,7 +54,7 @@ const Layout: React.FC = () => {
         </div>
       </header>
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 overflow-auto min-h-0 flex flex-col">
         <Outlet />
       </main>
 
