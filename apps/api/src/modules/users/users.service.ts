@@ -38,4 +38,11 @@ export class UsersService {
     const user = await this.prisma.user.findUnique({ where: { id } });
     return user || undefined;
   }
+
+  async update(id: string, data: Partial<User>): Promise<User> {
+    return this.prisma.user.update({
+      where: { id },
+      data,
+    });
+  }
 }

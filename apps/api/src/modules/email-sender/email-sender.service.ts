@@ -20,8 +20,8 @@ export class EmailSenderService {
   }
 
   async sendVerificationEmail(to: string, token: string): Promise<void> {
-    const domain = this.configService.get<string>('DOMAIN') || 'localhost';
-    const verifyUrl = `https://${domain}/verify-email?token=${token}`;
+    const clientUrl = this.configService.get<string>('CLIENT_URL');
+    const verifyUrl = `${clientUrl}/#/verify-email?token=${token}`;
 
     try {
       await this.transporter.sendMail({
@@ -43,8 +43,8 @@ export class EmailSenderService {
   }
 
   async sendInviteEmail(to: string, inviteToken: string): Promise<void> {
-    const domain = this.configService.get<string>('DOMAIN') || 'localhost';
-    const inviteUrl = `https://${domain}/register?invite=${inviteToken}`;
+    const clientUrl = this.configService.get<string>('CLIENT_URL');
+    const inviteUrl = `${clientUrl}/#/register?invite=${inviteToken}`;
 
     try {
       await this.transporter.sendMail({
@@ -67,7 +67,7 @@ export class EmailSenderService {
   }
 
   async sendPasswordResetEmail(to: string, token: string): Promise<void> {
-    const domain = this.configService.get<string>('DOMAIN') || 'localhost';
+    const domain = this.configService.get<string>('CLIENT_URL') || 'localhost';
     const resetUrl = `https://${domain}/reset-password?token=${token}`;
 
     try {

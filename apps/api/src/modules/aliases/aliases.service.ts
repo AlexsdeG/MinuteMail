@@ -29,7 +29,7 @@ export class AliasesService {
   }
 
   async create(user: User | null, customSlug?: string): Promise<Alias> {
-    const domain = this.configService.get<string>('DOMAIN');
+    const domain = this.configService.get<string>('CLIENT_URL');
     let address = '';
     
     if (customSlug) {

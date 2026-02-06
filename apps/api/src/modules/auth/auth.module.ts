@@ -9,12 +9,16 @@ import { LocalStrategy } from './local.strategy';
 import { JwtStrategy } from './jwt.strategy';
 import { InvitesModule } from '../invites/invites.module';
 
+import { EmailVerificationService } from './email-verification.service';
+import { PrismaModule } from '../../prisma/prisma.module';
+
 @Module({
   imports: [
     UsersModule,
     PassportModule,
     ConfigModule,
     InvitesModule,
+    PrismaModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
@@ -24,8 +28,8 @@ import { InvitesModule } from '../invites/invites.module';
       inject: [ConfigService],
     }),
   ],
-  providers: [AuthService, LocalStrategy, JwtStrategy],
+  providers: [AuthService, LocalStrategy, JwtStrategy, EmailVerificationService],
   controllers: [AuthController],
-  exports: [AuthService],
+  exports: [AuthService, EmailVerificationService],
 })
 export class AuthModule {}

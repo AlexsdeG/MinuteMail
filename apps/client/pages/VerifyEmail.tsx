@@ -25,9 +25,11 @@ const VerifyEmail: React.FC = () => {
 
   const verifyEmail = async () => {
     try {
-      const response = await api.get<{ message: string }>(`/settings/verify/${token}`);
+      const response = await api.get<{ message: string }>(`/auth/verify-email?token=${token}`);
       setStatus('success');
       setMessage(response.data.message || 'Email verified successfully!');
+      // Update global auth context if user is already logged in? 
+      // For now, redirection to dashboard allows refresh if needed.
     } catch (error: any) {
       setStatus('error');
       setMessage(error.response?.data?.message || 'Failed to verify email');

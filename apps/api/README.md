@@ -25,7 +25,7 @@ REDIS_PORT=6379
 JWT_SECRET=super_secret_key
 
 # Application Configuration
-DOMAIN=localhost
+CLIENT_URL=your-client-url
 REGISTER=false
 
 # SMTP Configuration

@@ -11,6 +11,7 @@ export const envSchema = Joi.object({
   REDIS_HOST: Joi.string().required(),
   REDIS_PORT: Joi.number().default(6379),
   JWT_SECRET: Joi.string().required(),
-  DOMAIN: Joi.string().required(),
   REGISTER: Joi.boolean().default(false),
+  CLIENT_URL: Joi.string().uri().required(),
+  CORS_ORIGINS: Joi.string().optional(),
 });
